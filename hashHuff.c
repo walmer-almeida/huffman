@@ -46,6 +46,7 @@ void print_hash_table(hash_table *ht){
 		printf("\n");
 	}
 }
+
 int main(){
 	hash_table *hash_table= create_hash_table();
 	unsigned char byte;
