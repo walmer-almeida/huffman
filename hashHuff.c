@@ -1,24 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
-#define TAM 256
+#include "hashHuff.h"
 
-typedef struct element element;
-struct element{
-	void *byte;//(key)
-	long long int frequency;//(value)
-};
-typedef struct hash_table hash_table;
-struct hash_table{
-	element *table[TAM];
-};
 /*
-cria a hash, com cada character da tabela ascii como "byte" e coloca a "frequency"= 0 para todos os characteres
+ * Recieves nothing;
+ * Creates a hash with all ascii characters and frequency=0;
+ * Returns the created hash.
 */
 hash_table *create_hash_table(){ 
 	hash_table *new_hash= (hash_table*)malloc(sizeof(hash_table));
 	element *new_element;
 	int i;
-	for(i=0;i<TAM;i++){
+	for(i=0;i<HASHSIZE;i++){
 		new_element= (element*)malloc(sizeof(element));
 		new_hash->table[i]= new_element;
 		new_hash->table[i]->byte= (unsigned char)i;
@@ -27,19 +18,23 @@ hash_table *create_hash_table(){
 	return new_hash;
 }
 /*
-A partir do "byte" recebido, incrementar a "frequency" para cada "byte" correspondente
-*/
+ * Recieves a hash table and a byte;
+ * Increases the byte frequency at hash table's byte position;
+ * Returns nothing.
+ */
 void put(hash_table *ht, void *byte){
-	int h = (int)byte % TAM;
+	int h = (int)byte % HASHSIZE;
 	ht->table[h]->frequency++;
 }
 /*
-Imprime toda a hash_table
+ * Recieves a hash table;
+ * Prints the whole hash table;
+ * Returns nothing.
 */
 void print_hash_table(hash_table *ht){
 	int i;
 	element *aux;
-	for(i=0; i<TAM; i++){
+	for(i=0; i<HASHSIZE; i++){
 		aux= ht->table[i];
 		printf("posicao: %d ", i);
 		printf("-> byte: %c frequency: %lld\t", (char)aux->byte, aux->frequency);
