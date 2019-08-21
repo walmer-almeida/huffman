@@ -98,6 +98,14 @@ huffTree *createNode(void *byte,long long int frequency){
     newNode->right = NULL;
     return newNode;
 }
+huffTree *create_tree(void *byte, long long int frequency, huffTree *L, huffTree *R){
+	huffTree *newNode = (huffTree*) malloc(sizeof(huffTree));
+	newNode->byte = byte;
+    newNode->frequency = frequency;
+    newNode->left = L;
+    newNode->right = R;
+    return newNode;
+}
 /*
  * Recieves the tree root;
  * Checks the tree size by running it recursively.
@@ -129,6 +137,20 @@ void printTreeInFile(huffTree *root, FILE *compactFile){
         printTreeInFile(root->left,compactFile);
         printTreeInFile(root->right,compactFile);
     }
+}
+
+void printTree(huffTree *root){
+	printf(" (");
+    if(root!=NULL){
+        if (isLeaf(root) && (comparing(root->byte,'*')||comparing(root->byte,(char)SLASH)))
+        {
+			printf("%c",(char)SLASH);
+        }
+        printf("%c",(unsigned char)root->byte);
+        printTree(root->left);
+        printTree(root->right);
+    }
+	printf(") ");
 }
 /*END OF TREE FUNCTIONS*/
 /*START OF HEAP FUNCTIONS*/
@@ -182,12 +204,12 @@ void min_heapify(heap *h, int i){
 		min_heapify(h, smallest);
 	}
 }
-void enqueue(heap *h, void *item){//adiciona o elemento
+void enqueue(heap *h, huffTree *item){//adiciona o elemento
 
 	if(h->size >= MAX_HEAP_SIZE){
 		printf("Heap overflow");
 	}else{
-		h->data[++h->size]->byte = item;
+		h->data[++h->size] = item;
 		int key_index = h->size;
 		int parent_index = get_parent_index(h, h->size);
 		while(parent_index >= 1 && h->data[key_index]->frequency < h->data[parent_index]->frequency){
@@ -211,5 +233,17 @@ void *dequeue(heap *h){//tira o elemento da frente(no caso da max_heapify, o mai
 	}
 }
 
+
+huffTree *create_Tree_from_heap(heap *h){
+	huffTree *L, *R, *aux;
+	unsigned char byte_aux= '*';
+	while(h->size > 1){
+		L= dequeue(h);
+		R= dequeue(h);
+		aux= create_tree(&byte_aux, L->frequency + R->frequency, L, R);
+		enqueue(h, aux);
+	}
+	return dequeue(h);
+}
 /*END OF HEAP FUNCTIONS*/
 #endif
