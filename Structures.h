@@ -64,6 +64,22 @@ void print_hash_table(hash_table *ht){
 		printf("\n");
 	}
 }
+heap *insert_heap_from_hash(hash_table *ht){
+    heap *h= create_heap();
+    huffTree *node;
+    int i;
+    for(i=0; i<HASHSIZE; i++){
+        if(ht->table[i]->frequency != 0){
+            node= createNode(ht->table[i]->byte, ht->table[i]->frequency);
+            enqueue(h, node);
+            free(ht->table[i]);
+        }else{
+            free(ht->table[i]);
+        }
+    }
+    free(ht);
+    return h;
+}
 /*END OF HASH FUNCTIONS*/
 /*START OF TREE FUNCTIONS*/
 #define SLASH 92
