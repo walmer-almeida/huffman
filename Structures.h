@@ -18,8 +18,8 @@ struct element{
 	long long int frequency;//(value)
 };
 
-typedef struct hash_table hash_table;
-struct hash_table{
+typedef struct hashTable hashTable;
+struct hashTable{
 	element *table[HASHSIZE];
 };
 
@@ -28,57 +28,54 @@ struct hash_table{
  * Creates a hash with all ascii characters and frequency=0;
  * Returns the created hash.
 */
-hash_table *create_hash_table(){ 
-	hash_table *new_hash= (hash_table*)malloc(sizeof(hash_table));
-	element *new_element;
+hashTable *createHashTable(){ 
+	hashTable *newHash= (hashTable*)malloc(sizeof(hashTable));
 	int i;
 	for(i=0;i<HASHSIZE;i++){
-		new_element= (element*)malloc(sizeof(element));
-		new_hash->table[i]= new_element;
-		new_hash->table[i]->byte= (unsigned char)i;
-		new_hash->table[i]->frequency= 0;
+		newHash->table[i]=NULL;
 	}
-	return new_hash;
+	return newHash;
+}
+
+element *createElement(void *item,size_t dataSize){
+	element *newElement = (element*)malloc(sizeof(element));
+	newElement->byte = malloc(dataSize);
+	*(unsigned char*)(newElement->byte) = *(unsigned char*) item;
+	newElement->frequency=1;
+	return newElement;
 }
 /*
  * Recieves a hash table and a byte;
  * Increases the byte frequency at hash table's byte position;
  * Returns nothing.
  */
-void put(hash_table *ht, void *byte){
-	int h = (int)byte % HASHSIZE;
-	ht->table[h]->frequency++;
+void put(hashTable *ht, void *byte){
+	int key; 
+	key = (*(unsigned char *)byte % HASHSIZE);
+	if (ht->table[key]!=NULL)
+	{
+		ht->table[key]->frequency++;
+	}
+	else{
+		ht->table[key] = createElement(byte,sizeof(unsigned char));
+	}
+	
+
 }
 /*
  * Recieves a hash table;
  * Prints the whole hash table;
  * Returns nothing.
 */
-void print_hash_table(hash_table *ht){
+void printHashTable(hashTable *ht){
 	int i;
-	element *aux;
 	for(i=0; i<HASHSIZE; i++){
-		aux= ht->table[i];
-		printf("posicao: %d ", i);
-		printf("-> byte: %c frequency: %lld\t", (char)aux->byte, aux->frequency);
-		printf("\n");
+		if(ht->table[i] != NULL){
+			printf("posicao: %d ", i);
+			printf("-> byte: %c frequency: %lld\t", *(char*)ht->table[i]->byte, ht->table[i]->frequency);
+			printf("\n");
+		}
 	}
-}
-heap *insert_heap_from_hash(hash_table *ht){
-    heap *h= create_heap();
-    huffTree *node;
-    int i;
-    for(i=0; i<HASHSIZE; i++){
-        if(ht->table[i]->frequency != 0){
-            node= createNode(ht->table[i]->byte, ht->table[i]->frequency);
-            enqueue(h, node);
-            free(ht->table[i]);
-        }else{
-            free(ht->table[i]);
-        }
-    }
-    free(ht);
-    return h;
 }
 /*END OF HASH FUNCTIONS*/
 /*START OF TREE FUNCTIONS*/
@@ -108,15 +105,18 @@ bool isLeaf(huffTree *root){
 */
 huffTree *createNode(void *byte,long long int frequency){
     huffTree *newNode = (huffTree*) malloc(sizeof(huffTree));
-    newNode->byte = byte;
+    newNode->byte = malloc(sizeof(unsigned char));
+	*(unsigned char * )newNode -> byte = *(unsigned char *) byte;
     newNode->frequency = frequency;
     newNode->left = NULL;
     newNode->right = NULL;
     return newNode;
 }
-huffTree *create_tree(void *byte, long long int frequency, huffTree *L, huffTree *R){
+
+huffTree *createTree(void *byte, long long int frequency, huffTree *L, huffTree *R){
 	huffTree *newNode = (huffTree*) malloc(sizeof(huffTree));
-	newNode->byte = byte;
+	newNode->byte = malloc(sizeof(unsigned char));
+	*(unsigned char * )newNode -> byte = *(unsigned char *) byte;
     newNode->frequency = frequency;
     newNode->left = L;
     newNode->right = R;
@@ -144,25 +144,22 @@ int treeSize(huffTree*root){
  * Returns nothing.
 */
 void printTreeInFile(huffTree *root, FILE *compactFile){
-    if(root!=NULL){
+    if(root != NULL){
         if (isLeaf(root) && (comparing(root->byte,'*')||comparing(root->byte,(char)SLASH)))
         {
-            fprintf(compactFile,(char)SLASH);
+            fputc((char)SLASH, compactFile);
         }
-        fprintf(compactFile,"%c",(unsigned char)root->byte);
+        fprintf(compactFile,"%c", *(unsigned char*)root->byte);
         printTreeInFile(root->left,compactFile);
         printTreeInFile(root->right,compactFile);
     }
 }
 
+
 void printTree(huffTree *root){
 	printf(" (");
-    if(root!=NULL){
-        if (isLeaf(root) && (comparing(root->byte,'*')||comparing(root->byte,(char)SLASH)))
-        {
-			printf("%c",(char)SLASH);
-        }
-        printf("%c",(unsigned char)root->byte);
+    if(root != NULL){
+        printf("%c", *(char*)root->byte);
         printTree(root->left);
         printTree(root->right);
     }
@@ -176,7 +173,7 @@ struct _heap{
 	int size;
 	huffTree *data[MAX_HEAP_SIZE];
 };
-heap *create_heap(){
+heap *createHeap(){
     int i;
 	heap *new_heap= (heap*)malloc(sizeof(heap));
     for(i=0; i < MAX_HEAP_SIZE; i++){
@@ -185,16 +182,17 @@ heap *create_heap(){
 	new_heap->size= 0;
 	return new_heap;
 }
-int is_empty(heap *h){
+int isEmpty(heap *h){
 	return (h->size == 0);
 }
-int get_parent_index(heap *h, int i){
+
+int getParentIndex(heap *h, int i){
 	return i/2;
 }
-int get_left_index(heap *h, int i){
+int getLeftIndex(heap *h, int i){
 	return 2*i;
 }
-int get_right_index(heap *h, int i){
+int getRightIndex(heap *h, int i){
 	return 2*i + 1;
 }
 void swap(huffTree **a, huffTree **b){
@@ -203,11 +201,11 @@ void swap(huffTree **a, huffTree **b){
     *a= *b;
     *b= aux;
 }
-void min_heapify(heap *h, int i){
+void minHeapify(heap *h, int i){
 	int smallest;
-	int left_index = get_left_index(h, i);
-	int right_index = get_right_index(h, i);
-	if(left_index <= h->size && h->data[left_index]->frequency < h->data[i]->frequency){
+	int left_index = getLeftIndex(h, i);
+	int right_index = getRightIndex(h, i);
+	if(left_index <= h->size && h->data[left_index]->frequency <= h->data[i]->frequency){
 		smallest = left_index;
 	}else{
 		smallest = i;
@@ -217,7 +215,7 @@ void min_heapify(heap *h, int i){
 	}
 	if(h->data[i]->byte != h->data[smallest]->byte){
 		swap(&h->data[i], &h->data[smallest]);
-		min_heapify(h, smallest);
+		minHeapify(h, smallest);
 	}
 }
 void enqueue(heap *h, huffTree *item){//adiciona o elemento
@@ -227,39 +225,116 @@ void enqueue(heap *h, huffTree *item){//adiciona o elemento
 	}else{
 		h->data[++h->size] = item;
 		int key_index = h->size;
-		int parent_index = get_parent_index(h, h->size);
-		while(parent_index >= 1 && h->data[key_index]->frequency < h->data[parent_index]->frequency){
+		int parent_index = getParentIndex(h, h->size);
+		while(parent_index >= 1 && h->data[key_index]->frequency <= h->data[parent_index]->frequency){
 
 			swap(&h->data[key_index], &h->data[parent_index]);
 			key_index = parent_index;
-			parent_index = get_parent_index(h, key_index);
+			parent_index = getParentIndex(h, key_index);
 		}
 	}
 }
 void *dequeue(heap *h){//tira o elemento da frente(no caso da max_heapify, o maior elemento)
-	if(is_empty(h)){
+	if(isEmpty(h)){
 		printf("Heap underflow");
 		return NULL;
 	}else{
 		huffTree *item = h->data[1];
 		h->data[1] = h->data[h->size];
 		h->size--;
-		min_heapify(h, 1);
+		minHeapify(h, 1);
 		return item;
 	}
 }
 
+heap *insertHeapFromHash(hashTable *ht){
+    heap *h= createHeap();
+    huffTree *node;
+    int i;
+    for(i=0; i<HASHSIZE; i++){
+        if(ht->table[i] != NULL){
+            node= createNode(ht->table[i]->byte, ht->table[i]->frequency);
+            enqueue(h, node);
+        }
+    }
+    return h;
+}
 
-huffTree *create_Tree_from_heap(heap *h){
+huffTree *createTreeFromHeap(heap *h){
 	huffTree *L, *R, *aux;
 	unsigned char byte_aux= '*';
 	while(h->size > 1){
 		L= dequeue(h);
 		R= dequeue(h);
-		aux= create_tree(&byte_aux, L->frequency + R->frequency, L, R);
+		aux= createTree(&byte_aux, L->frequency + R->frequency, L, R);
 		enqueue(h, aux);
 	}
 	return dequeue(h);
 }
 /*END OF HEAP FUNCTIONS*/
+/*START OF COMPRESSED BYTES' HASH FUNCTIONS*/
+typedef struct compElement compElement;
+typedef struct compHash compHash;
+struct compElement{
+	char bitsString[50];
+	int numberOfBits;
+}; 
+struct compHash
+{
+	compElement *table[HASHSIZE];
+};
+
+/*
+ * Recieves nothing;
+ * Creates a compHash with all their tables NULL compressed bytes and their bit count;
+ * Returns the created hash.
+*/
+compHash *createCompHash(){
+	int i;
+	compHash *newCompHash = (compHash*)malloc(sizeof(compHash));
+	for (i = 0; i < HASHSIZE; i++)
+	{
+		newCompHash->table[i] = NULL;
+	}
+	return newCompHash;
+}
+
+/*
+ * Recieves a compHash, a byte, a string and the string size;
+ * Put your compressed byte and the amount of bits given a normal byte;
+ * Returns nothing.
+*/
+void putComp(compHash *cht,void *item, char bits[],int strSize){
+	int elementPos = *(unsigned char*) item;
+	int i;
+	compElement *newCompElement = (compElement*) malloc(sizeof(compElement));
+	newCompElement->numberOfBits = strSize;
+	for ( i = 0; i < strSize; i++)
+	{
+		newCompElement->bitsString[i] = bits[i];
+	}
+	cht->table[elementPos]= newCompElement;
+}
+
+/*
+ * Recieves a compHash;
+ * Print all tables that are not null;
+ * Returns nothing.
+*/
+void printHash(compHash *ht)
+{
+	for (int i = 0; i < 256; i++)
+	{
+		if (ht->table[i] != NULL)
+		{
+			printf("%d ->", i);
+			for (int j = 0; j < ht->table[i]->numberOfBits; j++)
+			{
+				printf("%c", ht->table[i]->bitsString[j]);
+			}
+			printf(" [%d]\n", ht->table[i]->numberOfBits);
+		}
+	}
+}
+/*END OF COMPRESSED BYTES' HASH FUNCTIONS*/
 #endif
