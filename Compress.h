@@ -61,7 +61,6 @@ void Compress(FILE *originalFile, char string_file[]){
             put(ht, &currentByte);    
         }
     }
-    //print_hash_table(ht);
     rewind(originalFile);
 
     printf("Creating heap..\n");
@@ -69,10 +68,7 @@ void Compress(FILE *originalFile, char string_file[]){
     
     printf("Creating Huffman tree..\n");
     bt= createTreeFromHeap(h);
-    //printTree(bt);
-    printf("\n");
     generateCompressedBytes(bt,0,cht,treePath);
-    //print_hash(cht);
 
     printf("Starting compression!\n");
     printf("Creating compacted file..\n");
@@ -83,7 +79,6 @@ void Compress(FILE *originalFile, char string_file[]){
     printf("Writing header..\n");
     trash = trasHSize(cht,ht);
     tree = treeSize(bt);
-    //printf("%d\n",(int)tree);
     trash = trash << 13;
     header = trash | tree;
 
