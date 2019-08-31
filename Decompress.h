@@ -57,7 +57,7 @@ void printBytes(FILE *compactedFile, FILE *decompressedFile, huffTree *root, sho
     for (byteNumber = 0; byteNumber < fileSize; byteNumber++)
     {
         currentByte = fgetc(compactedFile);
-        if (byteNumber==fileSize-1)  numOfBits = 8-compTrashSize;
+        if (byteNumber == (fileSize-1))  numOfBits = 8-compTrashSize;
         else numOfBits = 8;
         for (currBit = 0; currBit < numOfBits; currBit++)
         {
@@ -82,6 +82,7 @@ int decompress(FILE *compactedFile, char string_file[]){
     short compTrashSize, compTreeSize = 8191; //8191 = '0001111111111111'
     char decompressed_file_string[100];
     unsigned char firstByte, secondByte;
+    
     huffTree *bt = NULL;
     FILE *decompressedFile;
     getchar();
@@ -89,16 +90,15 @@ int decompress(FILE *compactedFile, char string_file[]){
     scanf("%[^\n]s", decompressed_file_string);
     compactedFile = fopen(string_file,"rb");
     decompressedFile = fopen(decompressed_file_string,"wb");
-    fseek(compactedFile,0,SEEK_END);
-    fileSize = ftell(compactedFile);
-    rewind(compactedFile);
-    printf("Compressed file size: %d bytes\n",fileSize);
     printf("Reading Header...\n");
     firstByte = fgetc(compactedFile);
     secondByte = fgetc(compactedFile);
     compTrashSize = firstByte>>5;
     compTreeSize = (firstByte<<8 | secondByte) & compTreeSize;
     bt = mountHTFromFile(compactedFile);
+    fseek(compactedFile,0,SEEK_END);
+    fileSize = ftell(compactedFile) - (compTreeSize+2);
+    printf("Compressed file size: %d bytes\n",fileSize + (compTreeSize+2));
     fseek(compactedFile,compTreeSize+2,SEEK_SET);
     printBytes(compactedFile,decompressedFile,bt,compTreeSize,compTrashSize,fileSize);
     fclose(compactedFile);
