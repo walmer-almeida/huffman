@@ -103,6 +103,7 @@ void Compress(FILE *originalFile, char string_file[]){
                 count++;
                 if (count==8) {
                     fprintf(compactedFile,"%c",compactedByte);
+                    //printf("%d\n", (int)compactedByte);
                     compactedByte = 0;
                     count = 0;
                 }        
@@ -110,9 +111,11 @@ void Compress(FILE *originalFile, char string_file[]){
         }
     }
     
-    if (trash!=0)fputc(currentByte,compactedFile);
-    
-   
+    if(trash!=0){
+        fputc(compactedByte,compactedFile);
+    }
+
+   //printf("%d terminou\n", (int)compactedByte);
     free(bt);
     free(h);
     free(ht);
